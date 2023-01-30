@@ -4,6 +4,7 @@ export class Sprite {
     this.context = canvas.getContext("2d");
     this.position = position;
     this.color = color
+    this.health = 100
     this.velocity = velocity;
     this.width = 50;
     this.height = 150;

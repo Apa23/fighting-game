@@ -47,6 +47,11 @@ function detectColitionRight({ rec1, rec2 }) {
     rec1.attackBox.position.y < rec2.position.y + rec2.height &&
     rec1.attackBox.position.y + rec1.attackBox.height > rec2.position.y)
 }
+let time = 10;
+function timerTick(){
+  setTimeout(timerTick, 1000)
+  if(time>0) time--
+}
 
 function animate() {
   window.requestAnimationFrame(animate);
@@ -94,27 +99,29 @@ function animate() {
     if (player.attackBox.direction === "left") {
       if (detectColitionLeft({ rec1: player, rec2: enemy })) {
         player.isAttacking = false;
-        console.log("hit")
+        enemy.health -= 20
+        document.querySelector('#enemy-health').style.width = enemy.health + '%';
       }
     } else if (player.attackBox.direction === "right") {
       if (detectColitionRight({ rec1: player, rec2: enemy })) {
         player.isAttacking = false;
-        console.log("hit")
+        enemy.health -= 20
+        document.querySelector('#enemy-health').style.width = enemy.health + '%';
       }
     }
   }
 
   if (enemy.isAttacking) {
-
     if (enemy.attackBox.direction === "left") {
       if (detectColitionLeft({ rec1: enemy, rec2: player })) {
         enemy.isAttacking = false;
-        console.log("hit")
+        player.health -= 20
+        document.querySelector('#player-health').style.width = player.health + '%';
       }
     } else if (enemy.attackBox.direction === "right") {
       if (detectColitionLeft({ rec1: player, rec2: enemy })) {
-        enemy.isAttacking = false;
-        console.log("hit")
+        player.isAttacking = false;
+        document.querySelector('#player-health').style.width = player.health + '%';
       }
     }
   }
