@@ -31,7 +31,9 @@ export class Sprite {
 
   update() {
     this.render();
-    this.position.x += this.velocity.x;
+    if(this.allowMove()){
+      this.position.x += this.velocity.x;
+    }
     this.position.y += this.velocity.y;
     if (this.position.y + this.height + this.velocity.y >= this.canvas.height) {
       this.velocity.y = 0;
@@ -52,5 +54,9 @@ export class Sprite {
     setTimeout(() => {
       this.isAttacking = false;
     }, 100)
+  }
+
+  allowMove() {
+    return (this.position.x + this.width + this.velocity.x <= this.canvas.width && this.position.x + this.velocity.x >= 0)
   }
 }

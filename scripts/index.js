@@ -1,4 +1,5 @@
 import { Sprite } from "./Sprite.js";
+import { Interface } from "./Interface.js";
 
 const canvas = document.querySelector('canvas');
 const context = canvas.getContext('2d');
@@ -22,6 +23,10 @@ const enemy = new Sprite(canvas, {
 });
 
 enemy.render();
+
+const gameInterface = new Interface ({player: player, enemy: enemy});
+
+let time = document.querySelector("#timer").innerHTML
 
 const keys = {
   a: { pressed: false },
@@ -47,11 +52,11 @@ function detectColitionRight({ rec1, rec2 }) {
     rec1.attackBox.position.y < rec2.position.y + rec2.height &&
     rec1.attackBox.position.y + rec1.attackBox.height > rec2.position.y)
 }
-let time = 10;
-function timerTick(){
-  setTimeout(timerTick, 1000)
-  if(time>0) time--
-}
+
+
+
+
+gameInterface.timerTick(time);
 
 function animate() {
   window.requestAnimationFrame(animate);
@@ -79,9 +84,9 @@ function animate() {
     enemy.velocity.y = -20;
   }
 
-  if (keys.ArrowLeft.pressed && enemy.lastKey === 'ArrowLeft') {
+  if (keys.ArrowLeft.pressed && enemy.lastKey === 'ArrowLeft' && enemy.allowMove()) {
     enemy.velocity.x = -5;
-  } else if (keys.ArrowRight.pressed && enemy.lastKey === 'ArrowRight') {
+  } else if (keys.ArrowRight.pressed && enemy.lastKey === 'ArrowRight' && enemy.allowMove()) {
     enemy.velocity.x = 5;
   }
 
@@ -125,6 +130,13 @@ function animate() {
       }
     }
   }
+
+  // GameOver detection
+  if (player.health <= 0 || enemy.health <= 0) {
+    document.querySelector("#game-result").style.display = 'flex';
+    gameInterface.determinateWinner();
+  }
+
 }
 
 animate();
