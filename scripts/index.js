@@ -1,4 +1,5 @@
 import { Sprite } from "./Sprite.js";
+import { Fighter } from "./Fighter.js";
 import { Interface } from "./Interface.js";
 
 const canvas = document.querySelector('canvas');
@@ -9,22 +10,64 @@ canvas.height = 576;
 
 context.fillRect(0, 0, canvas.width, canvas.height);
 
-const player = new Sprite(canvas, {
+const background = new Sprite(canvas, {
+  position: {
+    x: 0, y: 0
+  },
+  imageSrc: './assets/background.png'
+})
+
+const shop = new Sprite(canvas, {
+  position: {
+    x: 600, y: 128
+  },
+  imageSrc: './assets/shop.png',
+  scale: 2.75,
+  framesMax: 6,
+})
+
+
+const player = new Fighter(canvas, {
   position: { x: 0, y: 0 },
   velocity: { x: 0, y: 0 },
-  color: "green"
+  imageSrc: './assets/samuraiMack/Idle.png',
+  framesMax: 8,
+  scale: 2.5,
+  offset: { x: 235, y: 157 },
+  sprites: {
+    idle: { imgSrc: './assets/samuraiMack/Idle.png', framesMax: 8 },
+    run: { imgSrc: './assets/samuraiMack/Run.png', framesMax: 8 },
+    jump: { imgSrc: './assets/samuraiMack/Jump.png', framesMax: 2 },
+    fall: { imgSrc: './assets/samuraiMack/Fall.png', framesMax: 2 },
+    attack1: { imgSrc: './assets/samuraiMack/Attack1.png', framesMax: 6 },
+    attack2: { imgSrc: './assets/samuraiMack/Attack2.png', framesMax: 6 },
+  }
 });
 
 player.render();
 
-const enemy = new Sprite(canvas, {
+const enemy = new Fighter(canvas, {
   position: { x: 400, y: 100 },
   velocity: { x: 0, y: 0 },
+  imageSrc: './assets/kenji/Idle.png',
+  framesMax: 4,
+  scale: 2.5,
+  offset: { x: 215, y: 170 },
+  sprites: {
+    idle: { imgSrc: './assets/kenji/Idle.png', framesMax: 4 },
+    run: { imgSrc: './assets/kenji/Run.png', framesMax: 8 },
+    jump: { imgSrc: './assets/kenji/Jump.png', framesMax: 2 },
+    fall: { imgSrc: './assets/kenji/Fall.png', framesMax: 2 },
+    attack1: { imgSrc: './assets/kenji/Attack1.png', framesMax: 4 },
+    attack2: { imgSrc: './assets/kenji/Attack2.png', framesMax: 4 },
+  }
 });
+
+enemy.framesHold = 8;
 
 enemy.render();
 
-const gameInterface = new Interface ({player: player, enemy: enemy});
+const gameInterface = new Interface({ player: player, enemy: enemy });
 
 let time = document.querySelector("#timer").innerHTML
 
@@ -39,29 +82,12 @@ const keys = {
   Enter: { pressed: false },
 }
 
-function detectColitionLeft({ rec1, rec2 }) {
-  return (rec1.attackBox.position.x - rec1.offset < rec2.position.x + rec2.width &&
-    rec1.attackBox.position.x + rec1.attackBox.width - rec1.offset > rec2.position.x &&
-    rec1.attackBox.position.y < rec2.position.y + rec2.height &&
-    rec1.attackBox.position.y + rec1.attackBox.height > rec2.position.y)
-}
-
-function detectColitionRight({ rec1, rec2 }) {
-  return (rec1.attackBox.position.x + rec1.attackBox.width > rec2.position.x &&
-    rec1.attackBox.position.x < rec2.position.x + rec2.width &&
-    rec1.attackBox.position.y < rec2.position.y + rec2.height &&
-    rec1.attackBox.position.y + rec1.attackBox.height > rec2.position.y)
-}
-
-
-
-
 gameInterface.timerTick(time);
 
 function animate() {
   window.requestAnimationFrame(animate);
-  context.fillStyle = 'black'
-  context.fillRect(0, 0, canvas.width, canvas.height);
+  background.update();
+  shop.update();
   player.update();
   enemy.update();
 
@@ -69,25 +95,52 @@ function animate() {
   enemy.velocity.x = 0;
 
   // player movement
-  if (keys.w.pressed && !player.isJumping()) {
-    player.velocity.y = -20;
-  }
 
   if (keys.a.pressed && player.lastKey === 'a') {
-    player.velocity.x = -5;
+    player.velocity.x = -7;
+    player.switchSprite('run');
+
   } else if (keys.d.pressed && player.lastKey === 'd') {
-    player.velocity.x = 5;
+    player.velocity.x = 7;
+    player.switchSprite('run');
+  } else{
+    player.switchSprite('idle');
+  }
+
+  if (keys.w.pressed && !player.isJumping()) {
+    player.velocity.y = -18;
+  }
+
+  if (player.velocity.y < 0) {
+    player.switchSprite('jump');
+  }
+
+  if (player.position.y + player.height <= canvas.height - 97 && player.velocity.y > 0 ) {
+    player.switchSprite('fall');
   }
 
   // enemy movement
+  if (keys.ArrowLeft.pressed && enemy.lastKey === 'ArrowLeft' && enemy.allowMove()) {
+    enemy.velocity.x = -7;
+    enemy.switchSprite('run');
+
+  } else if (keys.ArrowRight.pressed && enemy.lastKey === 'ArrowRight' && enemy.allowMove()) {
+    enemy.velocity.x = 7;
+    enemy.switchSprite('run');
+  } else {
+    enemy.switchSprite('idle');
+  }
+  
   if (keys.ArrowUp.pressed && !enemy.isJumping()) {
-    enemy.velocity.y = -20;
+    enemy.velocity.y = -18;
   }
 
-  if (keys.ArrowLeft.pressed && enemy.lastKey === 'ArrowLeft' && enemy.allowMove()) {
-    enemy.velocity.x = -5;
-  } else if (keys.ArrowRight.pressed && enemy.lastKey === 'ArrowRight' && enemy.allowMove()) {
-    enemy.velocity.x = 5;
+  if (enemy.velocity.y < 0) {
+    enemy.switchSprite('jump');
+  }
+
+  if (enemy.position.y + enemy.height <= canvas.height - 97 && enemy.velocity.y > 0) {
+    enemy.switchSprite('fall');
   }
 
   // Attacking direction
@@ -102,13 +155,13 @@ function animate() {
   // Colition detecting
   if (player.isAttacking) {
     if (player.attackBox.direction === "left") {
-      if (detectColitionLeft({ rec1: player, rec2: enemy })) {
+      if (gameInterface.detectColitionLeft({ rec1: player, rec2: enemy })) {
         player.isAttacking = false;
         enemy.health -= 20
         document.querySelector('#enemy-health').style.width = enemy.health + '%';
       }
     } else if (player.attackBox.direction === "right") {
-      if (detectColitionRight({ rec1: player, rec2: enemy })) {
+      if (gameInterface.detectColitionRight({ rec1: player, rec2: enemy })) {
         player.isAttacking = false;
         enemy.health -= 20
         document.querySelector('#enemy-health').style.width = enemy.health + '%';
@@ -118,13 +171,13 @@ function animate() {
 
   if (enemy.isAttacking) {
     if (enemy.attackBox.direction === "left") {
-      if (detectColitionLeft({ rec1: enemy, rec2: player })) {
+      if (gameInterface.detectColitionLeft({ rec1: enemy, rec2: player })) {
         enemy.isAttacking = false;
         player.health -= 20
         document.querySelector('#player-health').style.width = player.health + '%';
       }
     } else if (enemy.attackBox.direction === "right") {
-      if (detectColitionLeft({ rec1: player, rec2: enemy })) {
+      if (gameInterface.detectColitionRight({ rec1: enemy, rec2: player })) {
         player.isAttacking = false;
         document.querySelector('#player-health').style.width = player.health + '%';
       }

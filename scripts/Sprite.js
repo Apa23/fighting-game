@@ -1,62 +1,48 @@
 export class Sprite {
-  constructor(canvas, { position, velocity, color = 'red' }) {
+  constructor(canvas, { position, imageSrc, scale = 1, framesMax = 1, offset = { x: 0, y: 0 } }) {
     this.canvas = canvas;
     this.context = canvas.getContext("2d");
     this.position = position;
-    this.color = color
-    this.health = 100
-    this.velocity = velocity;
     this.width = 50;
     this.height = 150;
-    this.offset = 50;
-    this.isAttacking = false;
-    this.lastKey = undefined;
-    this.attackBox = {
-      position: this.position,
-      width: 100,
-      height: 50,
-      direction: "right"
-    }
+    this.image = new Image();
+    this.image.src = imageSrc;
+    this.scale = scale;
+    this.framesMax = framesMax;
+    this.currentFrame = 0;
+    this.framesElapsed = 0;
+    this.framesHold = 4;
+    this.offset = offset
   }
 
   render() {
-    this.context.fillStyle = this.color;
-    this.context.fillRect(this.position.x, this.position.y, this.width, this.height);
-    if (this.attackBox.direction === "right" && this.isAttacking) {
-      this.context.fillRect(this.attackBox.position.x, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
-    } else if (this.attackBox.direction === "left" && this.isAttacking) {
-      this.context.fillRect(this.attackBox.position.x - this.offset, this.attackBox.position.y, this.attackBox.width, this.attackBox.height);
+    this.context.drawImage(this.image,
+      this.currentFrame * (this.image.width / this.framesMax),
+      0,
+      this.image.width / this.framesMax,
+      this.image.height,
+      this.position.x - this.offset.x,
+      this.position.y - this.offset.y,
+      this.image.width / this.framesMax * this.scale,
+      this.image.height * this.scale);
+  }
+
+  animateFrames(){
+    this.framesElapsed++;
+    if (this.framesElapsed % this.framesHold === 0) {
+      if (this.currentFrame < this.framesMax - 1) {
+        this.currentFrame++;
+      } else {
+        this.currentFrame = 0;
+      }
     }
   }
 
   update() {
     this.render();
-    if(this.allowMove()){
-      this.position.x += this.velocity.x;
-    }
-    this.position.y += this.velocity.y;
-    if (this.position.y + this.height + this.velocity.y >= this.canvas.height) {
-      this.velocity.y = 0;
-    } else {
-      this.velocity.y += 0.7
-    }
+    this.animateFrames();
   }
 
-  isJumping() {
-    if (this.position.y + this.height + this.velocity.y >= this.canvas.height) {
-      return false;
-    }
-    return true;
-  }
 
-  attack() {
-    this.isAttacking = true;
-    setTimeout(() => {
-      this.isAttacking = false;
-    }, 100)
-  }
-
-  allowMove() {
-    return (this.position.x + this.width + this.velocity.x <= this.canvas.width && this.position.x + this.velocity.x >= 0)
-  }
 }
+ 
